@@ -1,0 +1,31 @@
+#version 150
+
+out vec4 FragColor;
+uniform sampler2D tex;
+uniform sampler2D b_tex;
+
+uniform int mode;
+uniform vec3  render_color;
+
+
+uniform vec2 wh;
+
+void main(){
+  vec2 st=gl_FragCoord.st/wh;
+
+  vec2 color=texture(tex,st).rg;
+  vec3 back_color=texture(b_tex,st).rgb;
+  //black and white
+  //thiner the line
+  float line=smoothstep(0.2,0.5,color.g);
+  vec3 fColor=vec3(1.0);
+  if(mode==1){
+    fColor=mix(vec3(1.0),back_color,clamp(line*10.0,0.0,1.0)); //color background;
+  }else{
+    fColor=mix(vec3(1.0),render_color,clamp(line*10.0,0.0,1.0));//picked color
+  }
+    
+
+  FragColor=vec4(fColor,1.0);
+
+}

@@ -1,0 +1,56 @@
+#version 150
+
+out vec4 FragColor;
+
+uniform sampler2D tex;
+uniform sampler2D painting;
+
+
+uniform float da;
+uniform float db;
+uniform float f;
+uniform float k;
+uniform float dt;
+uniform int mode;
+
+uniform vec2 wh;
+
+float feed;
+float kill;
+
+void main(){
+
+
+  vec2 st=gl_FragCoord.st/wh;
+
+  vec4 col=texture(tex,st);
+  vec4 laplace=-col;
+  
+  laplace+=textureOffset(tex,st,ivec2(-1,1))*0.05;
+  laplace+=textureOffset(tex,st,ivec2(0,1))*0.2;
+  laplace+=textureOffset(tex,st,ivec2(1,1))*0.05;
+  laplace+=textureOffset(tex,st,ivec2(-1,0))*0.2;
+  laplace+=textureOffset(tex,st,ivec2(1,0))*0.2;
+  laplace+=textureOffset(tex,st,ivec2(1,-1))*0.05;
+  laplace+=textureOffset(tex,st,ivec2(0,-1))*0.2;
+  laplace+=textureOffset(tex,st,ivec2(-1,-1))*0.05;
+
+  if(mode==1){
+    //set feed and kill according to images
+    float val=texture(painting,st).r;
+    feed=0.01 + (val - 0.0) * (0.1 - 0.01) / (1.0 - 0.0);
+    kill=0.045 + (val - 0.0) * (0.07 - 0.045) / (1.0 - 0.0);
+  }
+  else{
+    feed=f;
+    kill=k;
+  }
+  
+  float midTerm=col.r*col.g*col.g;
+  
+  float cA=col.r+((da*laplace.r)-midTerm+feed*(1.0-col.r))*dt;
+  float cB=col.g+((db*laplace.g)+midTerm-((kill+feed)*col.g))*dt;
+  
+  FragColor=vec4(clamp(vec2(cA,cB),vec2(0.0),vec2(1.0)),0.0,1.0);
+
+}
